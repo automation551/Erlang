@@ -5,13 +5,10 @@ merge(X,[]) ->
     X;
 merge([],Y) ->
     Y;
+merge([Hx|X],[Hy|Y]) when Hy < Hx ->
+    [Hy|merge([Hx|X],Y)];
 merge([Hx|X],[Hy|Y]) ->
-    if
-        Hy < Hx ->
-            [Hy|merge([Hx|X],Y)];
-        true ->
-            [Hx|merge(X,[Hy|Y])]
-    end.
+    [Hx|merge(X,[Hy|Y])].
 
 split(X) ->
     split(X,[],[]).
@@ -21,7 +18,6 @@ split([X],Acc1,Acc2) ->
     [[X|Acc1],Acc2];
 split([X,Y|T],Acc1,Acc2) ->
     split(T,[X|Acc1],[Y|Acc2]).
-
 
 mergesort([]) ->
     [];
