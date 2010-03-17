@@ -13,9 +13,9 @@ merge([Hx|X],[Hy|Y]) ->
 split(X) ->
     split(X,[],[]).
 split([],Acc1,Acc2) ->
-    [Acc1,Acc2];
+    {Acc1,Acc2};
 split([X],Acc1,Acc2) ->
-    [[X|Acc1],Acc2];
+    {[X|Acc1],Acc2};
 split([X,Y|T],Acc1,Acc2) ->
     split(T,[X|Acc1],[Y|Acc2]).
 
@@ -24,5 +24,5 @@ mergesort([]) ->
 mergesort([H]) ->
     [H];
 mergesort(Lista) ->
-    [A,B] = split(Lista),
+    {A,B} = split(Lista),
     merge ( mergesort(A),mergesort(B)).
