@@ -1,7 +1,7 @@
 -module(zad1).
 -export([zaprzyjaznione/1]).
 
-% generowanie listy dzielników liczy
+% generowanie listy dzielnikow liczy
 dzielniki(Liczba) when is_integer(Liczba) ->
     dzielniki(Liczba, 1, [],math:sqrt(Liczba)).
 dzielniki(Liczba,Aktualny,Acc,Guard) when Aktualny =< Guard ->
