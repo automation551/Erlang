@@ -38,7 +38,7 @@ podziel([],Linia,_,LinieAcc) ->
     lists:reverse([""++lists:flatten(Linia)] ++ LinieAcc);
 podziel([H|T],Linia,Szerokosc,LinieAcc) when length(H) < Szerokosc ->
     F = string:len(lists:flatten(H)),
-    case string:len(lists:flatten(Linia)) < Szerokosc-F of
+    case string:len(lists:flatten(Linia)) =< Szerokosc-F of
         true ->
             podziel(T,Linia++" "++H,Szerokosc,LinieAcc);
         false ->
