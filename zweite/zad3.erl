@@ -1,6 +1,6 @@
 -module(zad3).
 -export([search/2,t/0,insert/3,new/1,delete/2,
-        findMax/1, zig/2,zig_zig/2,zig_zag/2]).
+        findMax/1, zig/2,splay/2]).
 
 -record(node, {key,val,left=nil,right=nil}).
 
@@ -79,53 +79,77 @@ delete(Node,Key) ->
         Err -> Err
     end.
 
-zig(N,K) ->
-    zig(N,N#node.left,K).
-zig(nil,_,_) ->
-    {error,zig};
-zig(P,LeftP,Key) when LeftP#node.key==Key ->
-    NewP = P#node{left = LeftP#node.right},
-    NewX = LeftP#node{right = NewP},
-    {ok,zig,NewX}.
 
-zig_zig(nil,_) ->
-    {error,not_found};
-%% zig_zig(#node{ left=#node{left=X} = P} = G, Key) when Key<X#node.key ->
-%%     {ok,zig_zig,R} = zig_zig(P,Key),
-%%     {ok,zig_zig,G#node{left=R}};
-zig_zig(#node{ left=#node{left=X} = P} = G, Key) when Key==X#node.key ->
+%% ZigZig
+zig(#node{ left=#node{left=X} = P} = G, Key) when Key==X#node.key ->
     NewG = G#node{left=P#node.right},
     NewP = P#node{right=NewG},
     %% step2
     SuperNewP = NewP#node{left=X#node.right},
     NewX = X#node{right=SuperNewP},
-    {ok,zig_zig,NewX};
-%% zig_zig(#node{ right=#node{right=X} = P} = G, Key) when Key>X#node.key ->
-%%     {ok,zig_zig,R} = zig_zig(P,Key),
-%%     {ok,zig_zig,G#node{right=R}};
-zig_zig(#node{ right=#node{right=X} =P} = G, Key) when Key==X#node.key ->
+    {ok,NewX};
+zig(#node{ right=#node{right=X} =P} = G, Key) when Key==X#node.key ->
     NewG = G#node{right=P#node.left},
     NewP = P#node{left=NewG},
     %% step2
     SuperNewP = NewP#node{right=X#node.left},
     NewX = X#node{left=SuperNewP},
-    {ok,zig_zig,NewX}.
-
-
-zig_zag(#node{ left=#node{right=X} =P} = G, Key) when Key==X#node.key ->
+    {ok,NewX};
+%% ZigZag
+zig(#node{ left=#node{right=X} =P} = G, Key) when Key==X#node.key ->
     NewP = P#node{right=X#node.right},
     NewX = X#node{left=NewP},
     %% step2
     NewG = G#node{left=NewX#node.right},
     SuperNewX = NewX#node{right=NewG},
-    {ok,zig_zag,SuperNewX};
-zig_zag(#node{ right=#node{left=X} =P} = G, Key) when Key==X#node.key ->
+    {ok,SuperNewX};
+zig(#node{ right=#node{left=X} =P} = G, Key) when Key==X#node.key ->
     NewP = P#node{left=X#node.right},
     NewX = X#node{right=NewP},
     %% step2
     NewG = G#node{right=NewX#node.left},
     SuperNewX = NewX#node{left=NewG},
-    {ok,zig_zag,SuperNewX}.
+    {ok,SuperNewX};
+%% Zig
+zig(#node{left=X} = P, Key) when X#node.key==Key ->
+    NewP = P#node{left = X#node.right},
+    NewX = X#node{right = NewP},
+    {ok,NewX};
+zig(#node{right=X} = P, Key) when X#node.key==Key ->
+    NewP = P#node{right = X#node.left},
+    NewX = X#node{left = NewP},
+    {ok,NewX};
+zig(nil,_) ->
+    {error,not_found};
+zig(_,_) ->
+    {error,zig}.
+
+splay(#node{left=X} = R,Key) when Key==X#node.key ->
+    zig(R,Key);
+splay(#node{right=X} = R,Key) when Key==X#node.key ->
+    zig(R,Key);
+splay(T,Key) when Key<T#node.key ->
+    case zig(T#node.left,Key) of
+        {error,zig} ->
+            {ok,NewLeft} = splay(T#node.left,Key),
+            {ok,New} = T#node{left=NewLeft},
+            zig(New,Key);
+        {ok,New} ->
+            zig(T#node{left=New},Key);
+        {error,not_found} ->
+            {error,not_found}
+   end;
+splay(T,Key) when Key>T#node.key ->
+    case zig(T#node.right,Key) of
+        {error,zig} ->
+            {ok,NewRight} = splay(T#node.right,Key),
+            {ok,New} = T#node{right=NewRight},
+            zig(New,Key);
+        {ok,New} ->
+            zig(T#node{right=New},Key);
+        {error,not_found} ->
+            {error,not_found}
+   end.
 
 
 % test tree
