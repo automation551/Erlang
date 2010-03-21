@@ -1,6 +1,6 @@
 -module(zad3).
 -export([search/2,t/0,insert/3,new/1,delete/2,
-        findMax/1]).
+        findMax/1, zig/2,zig_zig/2,zig_zag/2]).
 
 -record(node, {key,val,left=nil,right=nil}).
 
@@ -10,7 +10,7 @@ new({K,V}) ->
 
 %% search/2 (Tree,Key) -> {ok,Wartosc}
 search(Node,Key) when Key == Node#node.key ->
-    {ok,Node#node.val};
+    {ok,Node,Node#node.val};
 search(nil,_) ->
     {error,not_found};
 search(Node,Key) when Key<Node#node.key ->
@@ -79,10 +79,53 @@ delete(Node,Key) ->
         Err -> Err
     end.
 
+zig(N,K) ->
+    zig(N,N#node.left,K).
+zig(nil,_,_) ->
+    {error,zig};
+zig(P,LeftP,Key) when LeftP#node.key==Key ->
+    NewP = P#node{left = LeftP#node.right},
+    NewX = LeftP#node{right = NewP},
+    {ok,zig,NewX}.
+
+zig_zig(nil,_) ->
+    {error,not_found};
+%% zig_zig(#node{ left=#node{left=X} = P} = G, Key) when Key<X#node.key ->
+%%     {ok,zig_zig,R} = zig_zig(P,Key),
+%%     {ok,zig_zig,G#node{left=R}};
+zig_zig(#node{ left=#node{left=X} = P} = G, Key) when Key==X#node.key ->
+    NewG = G#node{left=P#node.right},
+    NewP = P#node{right=NewG},
+    %% step2
+    SuperNewP = NewP#node{left=X#node.right},
+    NewX = X#node{right=SuperNewP},
+    {ok,zig_zig,NewX};
+%% zig_zig(#node{ right=#node{right=X} = P} = G, Key) when Key>X#node.key ->
+%%     {ok,zig_zig,R} = zig_zig(P,Key),
+%%     {ok,zig_zig,G#node{right=R}};
+zig_zig(#node{ right=#node{right=X} =P} = G, Key) when Key==X#node.key ->
+    NewG = G#node{right=P#node.left},
+    NewP = P#node{left=NewG},
+    %% step2
+    SuperNewP = NewP#node{right=X#node.left},
+    NewX = X#node{left=SuperNewP},
+    {ok,zig_zig,NewX}.
 
 
-
-
+zig_zag(#node{ left=#node{right=X} =P} = G, Key) when Key==X#node.key ->
+    NewP = P#node{right=X#node.right},
+    NewX = X#node{left=NewP},
+    %% step2
+    NewG = G#node{left=NewX#node.right},
+    SuperNewX = NewX#node{right=NewG},
+    {ok,zig_zag,SuperNewX};
+zig_zag(#node{ right=#node{left=X} =P} = G, Key) when Key==X#node.key ->
+    NewP = P#node{left=X#node.right},
+    NewX = X#node{right=NewP},
+    %% step2
+    NewG = G#node{right=NewX#node.left},
+    SuperNewX = NewX#node{left=NewG},
+    {ok,zig_zag,SuperNewX}.
 
 
 % test tree
