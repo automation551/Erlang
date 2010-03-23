@@ -1,5 +1,5 @@
 -module(zad1).
--export([zaprzyjaznione/1,dzielniki/1, zaprzyjaznione/2]).
+-export([zaprzyjaznione/1]).
 
 % generowanie listy dzielnikow liczy
 dzielniki(Liczba) when is_integer(Liczba) ->
@@ -17,6 +17,7 @@ dzielniki(Liczba,_,Acc,_) ->
 
 zaprzyjaznione(X,Y) ->
     (lists:sum(dzielniki(X))-X == Y) and (lists:sum(dzielniki(Y))-Y == X).
+
 zaprzyjaznione(N) ->
     [ {X,Y} || X <- lists:seq(1,N),
                Y <- lists:seq(X+1,N),
