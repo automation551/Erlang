@@ -9,11 +9,11 @@
 start() ->
     Pid = spawn(statistics,collect,[]).
 
-collect() ->
+collect(Data) ->
 
     receive
         {ring,start,RingId,Length,CurrentTime} ->
-            
+            collect(newData).
             ;
         {ring,stop,RingId,CurrentTime} ->
             

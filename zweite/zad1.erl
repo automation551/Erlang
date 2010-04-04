@@ -1,5 +1,5 @@
 -module(zad1).
--export([zaprzyjaznione/1]).
+-export([zaprzyjaznione/1,dzielniki/1]).
 
 % generowanie listy dzielnikow liczy
 dzielniki(Liczba) when is_integer(Liczba) ->
