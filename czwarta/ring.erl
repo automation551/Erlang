@@ -1,45 +1,53 @@
 -module(ring).
--export([start/4,process/4,loop/4]).
+-export([start/4,process/5,first/4,now_plus/1]).
 
-start(Pnadzorca,Pstats,Pdlugosc,RingId) ->
-    %Pstats ! {ring,start,RingId,Pdlugosc,now()},
+start(Pid_super,Pid_stats,Len,Ring_id) ->
+    Pid_stats ! {ring,start,Ring_id,Len,now()},
 
-    Ring = pierwszy(10,Pnadzorca,Pstats),
+    Ring = spawn(ring,first,[Len,Pid_super,Pid_stats,Ring_id]),
+    {Ring,Len}.
 
-    %Pnadzorca ! {ring,created,RingId},
-    %Pstats ! {ring,stop,RingId,now()},
-    Ring.
+first(N,Pid_super,Pid_stats,Ring_id) ->
+    Next = spawn(ring,process,[N-1,Pid_super,Pid_stats,self(),Ring_id]),
+    loop(Pid_super,Pid_stats,Next,N,Ring_id).
 
-
-
-
-pierwszy(N,Pnadzorca,Pstats) ->
-    Sasiad = spawn(ring,process,[N-1,Pnadzorca,Pstats,self()]).
-
-process(0,Pnadzorca,Pstats,PFirst) ->
-    loop(Pnadzorca,Pstats,PFirst,0);
-process(N,Pnadzorca,Pstats,PFirst) ->
-    Sasiad = spawn(ring,process,[N-1,Pnadzorca,Pstats,PFirst]),
-    loop(Pnadzorca,Pstats,Sasiad,N).
+process(0,Pid_super,Pid_stats,Pid_first,Ring_id) ->
+    Pid_super ! {ring,created,Ring_id},
+    Pid_stats ! {ring,stop,Ring_id,now()},
+    loop(Pid_super,Pid_stats,Pid_first,0,Ring_id);
+process(N,Pid_super,Pid_stats,Pid_first,Ring_id) ->
+    Next = spawn(ring,process,[N-1,Pid_super,Pid_stats,Pid_first,Ring_id]),
+    loop(Pid_super,Pid_stats,Next,N,Ring_id).
 
 
-loop(Nadzorca,Stats,Sasiad,Id) ->
-    io:format("slucham: ~p~n",[Id]),
+loop(Pid_super,Pid_stats,Pid_next,Id,Ring_id) ->
+    %io:format("slucham: ~p~n",[Id]),
    receive
         {TokenId,0,_} ->
-           io:format("mam wiadomosc ~p~n",[Id]),
-            Stats ! {token,stop,TokenId,0,Id,now()} ;
+    %       io:format("mam wiadomosc ~p~n",[Id]),
+            Pid_stats ! {token,stop,TokenId,0,Id,now()},
+            loop(Pid_super,Pid_stats,Pid_next,Id,Ring_id);
         {TokenId,Steps,StopTime} ->
             Now = now(),
             if
-                StopTime < Now ->
-                    Stats ! {token,stop,TokenId,Steps,Id,now()};
-               true ->
-                    Sasiad ! {TokenId,Steps-1,StopTime},
-                    io:format("przesylam dalej: ~p~n",[Id]),
-                    loop(Nadzorca,Stats,Sasiad,Id)
-            end;
-        stop ->
-            Sasiad ! stop,
-            true
+               StopTime < Now ->
+                   Pid_stats ! {token,stop,TokenId,Steps,Id,now()},
+                   loop(Pid_super,Pid_stats,Pid_next,Id,Ring_id);
+              true ->
+                   Pid_next ! {TokenId,Steps-1,StopTime},
+     %             io:format("przesylam dalej: ~p~n",[Id]),
+                   loop(Pid_super,Pid_stats,Pid_next,Id,Ring_id)
+           end;
+        {stop,0} ->
+           Pid_stats ! {ring,destroyed,Ring_id},
+           true;
+        {stop,N}  ->
+     %       io:format("zamykam ~p~n",[Id]),
+           Pid_next ! {stop,N-1},
+           true
     end.
+
+
+now_plus(Seconds) ->
+    {A,S,C} = now(),
+    {A,S+Seconds,C}.
