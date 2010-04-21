@@ -3,7 +3,6 @@
 
 start(Pid_super,Pid_stats,Len,Ring_id) ->
     Pid_stats ! {ring,start,Ring_id,Len,now()},
-
     Ring = spawn(ring,first,[Len,Pid_super,Pid_stats,Ring_id]),
     {Ring,Len}.
 

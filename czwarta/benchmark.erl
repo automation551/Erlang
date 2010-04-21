@@ -13,7 +13,7 @@ start() ->
     S1 ! {token,report},
     S1 ! {ring,report},
     %
-    {R2,_L2} = ring:start(self(),S1,30000,1), %nadzorca,statystyki,dlugosc,id
+    {R2,_L2} = ring:start(self(),S1,1000000,1), %nadzorca,statystyki,dlugosc,id
     Steps2 = 1000000,
     S1 ! {token,start,1,Steps2,now()},
     R2 ! {1,Steps2,ring:now_plus(20)},
