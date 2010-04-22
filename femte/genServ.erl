@@ -1,7 +1,7 @@
 -module(genServ).
 -export([start/2, start/3, start_link/2, start_link/3,
-         call/2, call/3, cast/2, reply/2]).
--compile(export_all).
+         call/2, call/3, cast/2, reply/2,init/1]).
+%-compile(export_all).
 
 start(Module, Args) ->
     Pid = spawn(?MODULE,init,[{Module,Args}]),
@@ -50,7 +50,7 @@ init({Module,Args}) ->
     end.
 
 loop({Module,State,Timeout}) ->
-    io:format("loop...~n"),
+    %io:format("loop...~n"),
     receive
         {call,From,Msg} ->
             case Module:handle_call(Msg,From,State) of
@@ -60,20 +60,14 @@ loop({Module,State,Timeout}) ->
                                                   loop({Module,NewState,Timeout});
                 {stop,Reason,Reply,NewState} -> reply(From,Reply),
                                                 Module:terminate(Reason,NewState);
-                throw(unknown_response)
+                _ -> throw(unknown_response)
             end;
         {cast,Request} ->
             case Module:handle_cast(Request,State) of
                 {noreply,NewState} -> loop({Module,NewState,10000});
                 {noreply,NewState,Timeout} -> loop({Module,NewState,Timeout});
                 {stop,Reason,NewState} -> terminate(Reason,NewState) ;
-                X -> case Module:handle_info(X,State) of
-                         {noreply,NewState} -> loop({Module,NewState,10000});
-                         {noreply,NewState,Timeout} ->
-                             loop({Module,NewState,Timeout});
-                         {stop,Reason,NewState} ->
-                             terminate(Reason,NewState)
-                     end
+                _ -> throw(unknown_response)
             end;
         stop ->
             ok
