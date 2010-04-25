@@ -18,6 +18,8 @@ mknodes({Name,Hosts}) ->
    %io:format("nodes-> ~p~n",[Nodes]),
    %rpc:eval_everywhere(application,start,[sasl]),
    %rpc:eval_everywhere(application,start,[os_mon]),
+    lists:map(fun (X) -> rpc:cast(X,application,start,[sasl]) end,nodes()),
+    lists:map(fun (X) -> rpc:cast(X,application,start,[os_mon]) end,nodes()),
     loop(Name,Nodes).
 
 stop(Name) ->
@@ -53,15 +55,17 @@ loop(Name,Nodes) ->
 	    A = atom_to_list('@'),
 	    Node = list_to_atom(N++A++H),
 	    slave:stop(Node),
-	    loop(Name,Nodes);
+	    loop(Name,nodes());
 	choose ->
-%	    rpc:eval_everywhere(application,start,[sasl]),
-%	    rpc:eval_everywhere(application,start,[os_mon]),
+	    lists:map(fun (X) -> rpc:cast(X,application,start,[os_mon]) end,nodes()),
 	    W = lists:map(fun (X) ->
 			      {X,
 			       rpc:call(X,cpu_sup,util,[],?TIMEOUT)} end,
-		      [node()|Nodes]),
-	    W
+		      Nodes),
+	    io:format("cpu_sup-> ~p~n",[W]),
+	    loop(Name,Nodes);
+	X ->
+	    io:format("nieznane zachowanie: ~p~n",[X])
     after ?PINGTIME ->
 	    PongPang = lists:map(fun(X) -> {X,net_adm:ping(X)} end,Nodes),
 	    Down = lists:filter(fun ({_,B}) -> B == pang end,PongPang),
