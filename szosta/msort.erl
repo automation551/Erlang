@@ -43,7 +43,7 @@ parallel_merge_sort(Nodes,ProcPerNode,ListToSort) ->
 parallel_merge_sort([],_Y,_X,N) ->
     readall(N,[]);
 parallel_merge_sort(Nodes,ProcPerNode,ListToSort,N) ->
-    LSublist = 500, %length(ListToSort)/length(Nodes),
+    LSublist = trunc(length(ListToSort)/length(Nodes)),g
     Splitted = split(ListToSort,LSublist),
     spawn(hd(Nodes),?MODULE,msort,[ProcPerNode,hd(Splitted),self()]),
     parallel_merge_sort(tl(Nodes),ProcPerNode,tl(Splitted),N+1).
