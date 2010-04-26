@@ -43,15 +43,17 @@ loop(ParentPid,Sorted1) ->
 %% parallel_merge_sort mergesortuje z wykorzystaniem tego wyzej
 %% na wezlach, kolejne wyniki odbiera w readall() i merguje je po kolei
 parallel_merge_sort(Nodes,ProcPerNode,ListToSort) ->
-    parallel_merge_sort(Nodes,ProcPerNode,ListToSort,0).
+    LSublist = trunc(length(ListToSort)/length(Nodes)),
+    Splitted = split(ListToSort,LSublist),
+    parallel_merge_sort(Nodes,ProcPerNode,Splitted,0).
 
 parallel_merge_sort([],_Y,_X,N) ->
     readall(N,[]);
 parallel_merge_sort(Nodes,ProcPerNode,ListToSort,N) ->
-    LSublist = trunc(length(ListToSort)/length(Nodes)),
-    Splitted = split(ListToSort,LSublist),
-    spawn(hd(Nodes),?MODULE,msort,[ProcPerNode,hd(Splitted),self()]),
-    parallel_merge_sort(tl(Nodes),ProcPerNode,tl(Splitted),N+1).
+    %LSublist = trunc(length(ListToSort)/length(Nodes)),
+    %Splitted = split(ListToSort,LSublist),
+    spawn(hd(Nodes),?MODULE,msort,[ProcPerNode,hd(ListToSort),self()]),
+    parallel_merge_sort(tl(Nodes),ProcPerNode,tl(ListToSort),N+1).
 
 %% zczytywanie kolejnych wynikow od wezlow,
 %% i mergowanie jej z juz posortowana lista
