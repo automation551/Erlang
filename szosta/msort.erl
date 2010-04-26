@@ -5,30 +5,35 @@
 %% msort mergesortuje podana liste przy uzyciu StopN procesow
 %% jako wynik wysyla do swojego rodzica {ok,Sorted}
 msort(StopN,Input,ParentPid) ->
-    msort(StopN,1,Input,ParentPid).
+    msort(StopN,0,Input,ParentPid),
+    receive
+        {ok,Sorted} -> Sorted
+    end.
 
 msort(StopN,N,Input,ParentPid) ->
     %io:format("~p: ~n",[N]),
     if
-        N*2 > StopN ->
-            %io:format("sortuje recznie~n"),
+        2*N+1 >= StopN ->
+            %io:format("tutaj: ~p, sortuje recznie, wysylam do ~p~n",[self(),ParentPid]),
             Sorted = mergesort:sort(Input),
             ParentPid ! {ok,Sorted};
         true ->
             %io:format("rozpraszam~n"),
             {Left,Right} = mergesort:split(Input),
-            _L = spawn(?MODULE,msort,[StopN,N*2,Left,self()]),
-            _R = spawn(?MODULE,msort,[StopN,N*2+1,Right,self()]),
+            _L = spawn(?MODULE,msort,[StopN,N*2+1,Left,self()]),
+            _R = spawn(?MODULE,msort,[StopN,N*2+2,Right,self()]),
             loop(ParentPid)
     end.
 
 loop(ParentPid) ->
+    %io:format("1. tutaj: ~p, czekam na prawe skrzydlo do ~p~n",[self(),ParentPid]),
     receive
         {ok,Sorted} ->
             loop(ParentPid,Sorted)
     end.
 
 loop(ParentPid,Sorted1) ->
+    %io:format("2. tutaj: ~p, wysylam do ~p~n",[self(),ParentPid]),
     receive
         {ok,Sorted2} ->
             X = mergesort:merge(Sorted1,Sorted2),
@@ -43,7 +48,7 @@ parallel_merge_sort(Nodes,ProcPerNode,ListToSort) ->
 parallel_merge_sort([],_Y,_X,N) ->
     readall(N,[]);
 parallel_merge_sort(Nodes,ProcPerNode,ListToSort,N) ->
-    LSublist = trunc(length(ListToSort)/length(Nodes)),g
+    LSublist = trunc(length(ListToSort)/length(Nodes)),
     Splitted = split(ListToSort,LSublist),
     spawn(hd(Nodes),?MODULE,msort,[ProcPerNode,hd(Splitted),self()]),
     parallel_merge_sort(tl(Nodes),ProcPerNode,tl(Splitted),N+1).
