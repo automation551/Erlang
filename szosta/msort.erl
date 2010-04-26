@@ -1,5 +1,5 @@
 -module(msort).
--export([msort/3,msort/4,parallel_merge_sort/3]).
+-export([msort/3,msort/4,parallel_merge_sort/3,split/2]).
 -import(mergesort).
 
 %% msort mergesortuje podana liste przy uzyciu StopN procesow
@@ -68,8 +68,8 @@ readall(N,Sorted1) ->
 %% split([1,2,3,4,5],2) -> [[1,2],[3,4],[5]].
 split(Input,Len) ->
     split(Input,Len,[]).
-split(F,Len,Acc) when length(F) =< Len ->
-    lists:append([F],Acc);
+split(F,Len,Acc) when length(F) < Len ->
+    [lists:append(F,hd(Acc))|tl(Acc)];
 split(Input,Len,Acc) ->
     {X,Rest} = lists:split(Len,Input),
     NewAcc = lists:append([X],Acc),
