@@ -1,14 +1,17 @@
 -module(mergesort).
 -export([merge/2,split/1,sort/1]).
 
-merge(X,[]) ->
-    X;
-merge([],Y) ->
-    Y;
-merge([Hx|X],[Hy|Y]) when Hy < Hx ->
-    [Hy|merge([Hx|X],Y)];
-merge([Hx|X],[Hy|Y]) ->
-    [Hx|merge(X,[Hy|Y])].
+merge(X,Y) ->
+    merge(X,Y,[]).
+
+merge(X,[],Acc) ->
+    lists:append(lists:reverse(Acc),X);
+merge([],Y,Acc) ->
+    lists:append(lists:reverse(Acc),Y);
+merge([Hx|X],[Hy|Y],Acc) when Hy < Hx ->
+    merge([Hx|X],Y,[Hy|Acc]);
+merge([Hx|X],[Hy|Y],Acc) ->
+    merge(X,[Hy|Y],[Hx|Acc]).
 
 split(X) ->
     split(X,[],[]).
