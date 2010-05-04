@@ -1,22 +1,24 @@
 -module(timeout).
--export([server/0,send/3,send/4,proxy/3]).
+-export([server/0,send/3,proxy/2]).
 
-proxy(Name,{request,_From,Request},Timeout) ->
+proxy(Name,{request,From,Request}) ->
     Name ! {request,self(),Request},
     receive
         X ->
-            _From ! X
-    after Timeout ->
-       _From ! {error,timeout}
+            From ! X
     end.
 
 send(Name,Request,Timeout) ->
-    spawn(fun () ->
-                  proxy(Name,Request,Timeout) end).
+  Pid = spawn(fun () ->
+                  proxy(Name,Request) end),
+  receive
+    X ->
+      X
+  after Timeout ->
+    exit(Pid,kill),
+    {error,timeout}
+  end.
 
-send(Node,Name,Request,Timeout) ->
-    spawn(Node,fun () ->
-                       proxy(Name,Request,Timeout) end).
 
 
 server() ->
